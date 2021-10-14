@@ -3,6 +3,8 @@
 @interface _UIStatusBarStringView : UILabel
 @property (nullable, nonatomic, copy) NSAttributedString *attributedText;
 @property (nonatomic, assign) BOOL shouldUpdateTime;
+@property (nonatomic, assign) BOOL isUsingDotFormat;
+- (void)amIUsingDotTimeFormat:(NSString *)stringToSearch separator:(NSString *)separator;
 @end
 
 @interface UIDevice (RUT)
@@ -39,6 +41,7 @@ void get_free_memory() {
 #pragma mark - Status bar configuration.
 %hook _UIStatusBarStringView
 %property (nonatomic, assign) BOOL shouldUpdateTime;
+%property (nonatomic, assign) BOOL isUsingDotFormat;
 
 - (instancetype)initWithFrame:(CGRect)frame {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshRam) name:@"RUT_refreshRam" object:nil];
@@ -47,7 +50,10 @@ void get_free_memory() {
 
 - (void)applyStyleAttributes:(id)arg1 {
     %orig;
-    if ([self.text containsString:@":"]) {
+
+    [self amIUsingDotTimeFormat:self.text separator:@"."];
+
+    if ([self.text containsString:@":"] || ([self.text containsString:@"."] && self.isUsingDotFormat)) {
         if ([UIDevice tf_deviceHasFaceID]) {
             self.numberOfLines = 2;
             self.textAlignment = NSTextAlignmentCenter;
@@ -59,7 +65,9 @@ void get_free_memory() {
 - (void)layoutSubviews {
     %orig;
     if (self.shouldUpdateTime) {
-        if ([self.text containsString:@":"]) {
+        [self amIUsingDotTimeFormat:self.text separator:@"."];
+
+        if ([self.text containsString:@":"] || ([self.text containsString:@"."] && self.isUsingDotFormat)) {
             [self setText:self.text];
             self.shouldUpdateTime = NO;
         }
@@ -67,7 +75,10 @@ void get_free_memory() {
 }
 
 -(void)setText:(NSString*)text{
-    if ([text containsString:@":"]) {
+
+    [self amIUsingDotTimeFormat:text separator:@"."];
+
+    if ([text containsString:@":"] || ([text containsString:@"."] && self.isUsingDotFormat)) {
         get_free_memory();
 
         NSString *spacer = [UIDevice tf_deviceHasFaceID] ? @"\n" : @" - ";
@@ -91,6 +102,15 @@ void get_free_memory() {
 %new - (void)refreshRam {
     self.shouldUpdateTime = YES;
     [self layoutSubviews];
+}
+
+%new - (void)amIUsingDotTimeFormat:(NSString *)stringToSearch separator:(NSString *)separator {
+    int times = [[stringToSearch componentsSeparatedByString:separator] count]-1;
+    if (times == 1) {
+        self.isUsingDotFormat = YES;
+    } else {
+        self.isUsingDotFormat = NO;
+    }
 }
 %end
 
