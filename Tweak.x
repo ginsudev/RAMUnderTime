@@ -57,7 +57,8 @@ void get_free_memory() {
         if ([UIDevice tf_deviceHasFaceID]) {
             self.numberOfLines = 2;
             self.textAlignment = NSTextAlignmentCenter;
-            self.font = [UIFont systemFontOfSize:12];        
+            self.font = [UIFont systemFontOfSize:12];      
+            [self setText:self.text];
         }
     }
 }
@@ -90,8 +91,14 @@ void get_free_memory() {
         }
 
         NSMutableAttributedString *finalString = [[NSMutableAttributedString alloc] init];
-        [finalString setAttributedString: [[NSAttributedString alloc] initWithString: text]];
-        [finalString appendAttributedString: [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory]]];
+
+        if ([UIDevice tf_deviceHasFaceID]) {
+            [finalString setAttributedString: [[NSAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName: [UIFont boldSystemFontOfSize:15]}]];
+            [finalString appendAttributedString: [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory] attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:8]}]];
+        } else {
+            [finalString setAttributedString: [[NSAttributedString alloc] initWithString:text]];
+            [finalString appendAttributedString: [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory]]];
+        }
         self.attributedText = finalString;
 
     } else {
