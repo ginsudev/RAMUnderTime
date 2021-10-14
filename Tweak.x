@@ -1,6 +1,8 @@
 #import <mach/mach.h>
 
 @interface _UIStatusBarStringView : UILabel
+@property (nullable, nonatomic, copy) NSAttributedString *attributedText;
+@property (nonatomic, assign) BOOL shouldUpdateTime;
 @end
 
 @interface UIDevice (RUT)
@@ -36,12 +38,14 @@ void get_free_memory() {
 
 #pragma mark - Status bar configuration.
 %hook _UIStatusBarStringView
+%property (nonatomic, assign) BOOL shouldUpdateTime;
+
 - (instancetype)initWithFrame:(CGRect)frame {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshRam) name:@"RUT_refreshRam" object:nil];
     return %orig;
 }
 
-- (void)layoutSubviews {
+- (void)applyStyleAttributes:(id)arg1 {
     %orig;
     if ([self.text containsString:@":"]) {
         if ([UIDevice tf_deviceHasFaceID]) {
@@ -49,15 +53,21 @@ void get_free_memory() {
             self.textAlignment = NSTextAlignmentCenter;
             self.font = [UIFont systemFontOfSize:12];        
         }
+    }
+}
 
-        if (![self.text containsString:@"MB"]) {
+- (void)layoutSubviews {
+    %orig;
+    if (self.shouldUpdateTime) {
+        if ([self.text containsString:@":"]) {
             [self setText:self.text];
+            self.shouldUpdateTime = NO;
         }
     }
 }
 
 -(void)setText:(NSString*)text{
-    if ([self.text containsString:@":"]) {
+    if ([text containsString:@":"]) {
         get_free_memory();
 
         NSString *spacer = [UIDevice tf_deviceHasFaceID] ? @"\n" : @" - ";
@@ -67,15 +77,23 @@ void get_free_memory() {
             NSRange range = [text rangeOfString:spacer];
             text = [text substringToIndex: range.location];
         }
-        text = [text stringByAppendingString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory]];
+
+        NSMutableAttributedString *finalString = [[NSMutableAttributedString alloc] init];
+        [finalString setAttributedString: [[NSAttributedString alloc] initWithString: text]];
+        [finalString appendAttributedString: [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory]]];
+        self.attributedText = finalString;
+
+    } else {
+        %orig(text);
     }
-    %orig(text);
 }
 
 %new - (void)refreshRam {
-    [self setText:self.text];
+    self.shouldUpdateTime = YES;
+    [self layoutSubviews];
 }
 %end
+
 
 #pragma mark - Update status bar when frontmost app changes.
 %hook SpringBoard
