@@ -114,7 +114,15 @@ void get_free_memory() {
 
 %new - (void)amIUsingDotTimeFormat:(NSString *)stringToSearch separator:(NSString *)separator {
     int times = [[stringToSearch componentsSeparatedByString:separator] count]-1;
-    if (times == 1) {
+
+    BOOL isRussianiPadDateFormat;
+    if (([[stringToSearch componentsSeparatedByString:@" "] count]-1 == 2) && [stringToSearch containsString:@"."]) {
+        isRussianiPadDateFormat = YES;
+    } else {
+        isRussianiPadDateFormat = NO;
+    }
+
+    if (times == 1 && !isRussianiPadDateFormat) {
         self.isUsingDotFormat = YES;
     } else {
         self.isUsingDotFormat = NO;
