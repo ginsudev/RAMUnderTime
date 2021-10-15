@@ -9,6 +9,7 @@
 
 @interface UIDevice (RUT)
 + (BOOL)tf_deviceHasFaceID;
++ (BOOL)currentIsIPad;
 @end
 
 static unsigned int freeMemory;
@@ -54,7 +55,7 @@ void get_free_memory() {
     [self amIUsingDotTimeFormat:self.text separator:@"."];
 
     if ([self.text containsString:@":"] || ([self.text containsString:@"."] && self.isUsingDotFormat)) {
-        if ([UIDevice tf_deviceHasFaceID]) {
+        if ([UIDevice tf_deviceHasFaceID] && ![UIDevice currentIsIPad]) {
             self.numberOfLines = 2;
             self.textAlignment = NSTextAlignmentCenter;
             self.font = [UIFont systemFontOfSize:12];      
@@ -82,7 +83,7 @@ void get_free_memory() {
     if ([text containsString:@":"] || ([text containsString:@"."] && self.isUsingDotFormat)) {
         get_free_memory();
 
-        NSString *spacer = [UIDevice tf_deviceHasFaceID] ? @"\n" : @" - ";
+        NSString *spacer = ([UIDevice tf_deviceHasFaceID] && ![UIDevice currentIsIPad]) ? @"\n" : @" - ";
 
         //Remove pre-existing RAM text, if it exists.
         if ([text containsString:@"MB"]) {
@@ -92,9 +93,9 @@ void get_free_memory() {
 
         NSMutableAttributedString *finalString = [[NSMutableAttributedString alloc] init];
 
-        if ([UIDevice tf_deviceHasFaceID]) {
-            [finalString setAttributedString: [[NSAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName: [UIFont boldSystemFontOfSize:15]}]];
-            [finalString appendAttributedString: [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory] attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:8]}]];
+        if ([UIDevice tf_deviceHasFaceID] && ![UIDevice currentIsIPad]) {
+            [finalString setAttributedString: [[NSAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName: [UIFont boldSystemFontOfSize:13]}]];
+            [finalString appendAttributedString: [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory] attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:10]}]];
         } else {
             [finalString setAttributedString: [[NSAttributedString alloc] initWithString:text]];
             [finalString appendAttributedString: [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@%d MB", spacer, freeMemory]]];
@@ -120,7 +121,6 @@ void get_free_memory() {
     }
 }
 %end
-
 
 #pragma mark - Update status bar when frontmost app changes.
 %hook SpringBoard
