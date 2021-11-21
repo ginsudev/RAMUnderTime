@@ -28,9 +28,6 @@ class StatusBarHook: ClassHook<UILabel> {
         
         NotificationCenter.default.addObserver(target, selector: #selector(updateText), name: Notification.Name("RUT_UpdateText"), object: nil)
         
-        target.numberOfLines = 2
-        target.textAlignment = NSTextAlignment.center
-        
         return target
     }
     
@@ -85,13 +82,26 @@ class StatusBarHook: ClassHook<UILabel> {
         }
     }
     
+    func applyStyleAttributes(_ arg1: AnyObject) {
+        orig.applyStyleAttributes(arg1)
+        amIUsingDotTimeFormat(target.text!, separator: ".")
+        if (target.text!.contains(":") || ((target.text!.contains(".") && self.isUsingDotFormat))) {
+            if (sharedVars().isNotchediPhone) {
+                target.numberOfLines = 2
+                target.textAlignment = NSTextAlignment.center
+                target.font = UIFont.systemFont(ofSize: 12)
+                self.setText(target.text!)
+            }
+        }
+    }
+    
     //orion: new
     func updateText() {
         
         amIUsingDotTimeFormat(target.text!, separator: ".")
         
         if (target.text!.contains(":") || ((target.text!.contains(".") && self.isUsingDotFormat))) {
-            setText(target.text!)
+            self.setText(target.text!)
         }
     }
     
