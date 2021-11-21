@@ -1,9 +1,9 @@
 import Orion
 import UIKit
+import LocalAuthentication
 import RAMUnderTimeC
 
 struct sharedVars {
-    
     var isNotchediPhone: Bool {
         return (!UIDevice.current.model.contains("iPad") && UIDevice.current.hasNotch)
     }
@@ -17,6 +17,7 @@ struct sharedVars {
     }
 }
 
+//MARK: - Status bar modifications
 class StatusBarHook: ClassHook<UILabel> {
     @Property(.assign) var isUsingDotFormat: Bool = false
     @Property(.assign) var shouldUpdateTime: Bool = true
@@ -122,6 +123,7 @@ class StatusBarHook: ClassHook<UILabel> {
     }
 }
 
+//MARK: - Fix updating text when status bar style changes, or when front-most app changes.
 class SBHook: ClassHook<NSObject> {
     static var targetName: String = "SpringBoard"
     
@@ -137,12 +139,14 @@ class CCHook: ClassHook<NSObject> {
     func _controlCenterWillDismiss(_ arg1: AnyObject) {
         orig._controlCenterWillDismiss(arg1)
         NotificationCenter.default.post(name: NSNotification.Name("RUT_UpdateText"), object: nil)
+        
     }
 }
 
 extension UIDevice {
     var hasNotch: Bool {
-        let bottom = UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0
-        return bottom > 0
+        let context = LAContext()
+        context.canEvaluatePolicy(LAPolicy.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        return context.biometryType == LABiometryType.faceID
     }
 }
