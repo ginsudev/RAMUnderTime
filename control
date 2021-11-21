@@ -6,5 +6,5 @@ Description: Shows the amount of free RAM in the status bar.
 Maintainer: Ginsu
 Author: Ginsu
 Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000)
+Depends: ${ORION}, firmware (>= 12.2)
 Depiction: https://ginsudev.github.io/repo/depictions/ramundertime/index.html
