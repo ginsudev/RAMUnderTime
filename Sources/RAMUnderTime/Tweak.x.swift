@@ -108,11 +108,7 @@ class StatusBarHook: ClassHook<UILabel> {
             isRussianiPadDateFormat = true
         }
         
-        if (times == 1 && !isRussianiPadDateFormat) {
-            self.isUsingDotFormat = true
-        } else {
-            self.isUsingDotFormat = false
-        }
+        self.isUsingDotFormat = (times == 1 && !isRussianiPadDateFormat) // Returns true or false 
     }
 }
 
