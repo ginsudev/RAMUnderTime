@@ -1,11 +1,16 @@
 import Orion
 import UIKit
-import LocalAuthentication
 import RAMUnderTimeC
+
+@objc protocol UIDevicePrivate {
+    var currentIsIPad: Bool { get set }
+    var tf_deviceHasFaceID: Bool { get set }
+}
 
 struct sharedVars {
     var isNotchediPhone: Bool {
-        return (!UIDevice.current.model.contains("iPad") && UIDevice.current.hasNotch)
+        let converted = Dynamic.UIDevice.as(interface: UIDevicePrivate.self)
+        return (!converted.currentIsIPad && converted.tf_deviceHasFaceID)
     }
     
     var separatorText: String {
@@ -33,38 +38,30 @@ class StatusBarHook: ClassHook<UILabel> {
     }
     
     func setText(_ text: String) {
-        
         var txt = text
         
         amIUsingDotTimeFormat(txt, separator: ".")
-        
         if (txt.contains(":") || ((txt.contains(".") && self.isUsingDotFormat))) {
-            
             if (txt.contains("MB")) {
                 txt = txt.components(separatedBy: "\(sharedVars().separatorText)")[0]
             }
-
+            
             var attributedString: NSMutableAttributedString
             var attributedString_secondComponent: NSAttributedString
             
             if (sharedVars().isNotchediPhone) {
-                
                 let firstAttributes: [NSAttributedString.Key: Any] = [.font: UIFont.boldSystemFont(ofSize: 13)]
                 let secondAttributes: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 10)]
                 
                 attributedString = NSMutableAttributedString(string: txt, attributes: firstAttributes)
                 attributedString_secondComponent = NSAttributedString(string: sharedVars().amountOfFreeRAM, attributes: secondAttributes)
-            
             } else {
-                
                 attributedString = NSMutableAttributedString(string: txt, attributes: nil)
                 attributedString_secondComponent = NSAttributedString(string: sharedVars().amountOfFreeRAM, attributes: nil)
-            
             }
             
             attributedString.append(attributedString_secondComponent)
             target.attributedText = attributedString
-            
         } else {
             orig.setText(txt)
         }
@@ -72,9 +69,7 @@ class StatusBarHook: ClassHook<UILabel> {
     
     func layoutSubviews() {
         orig.layoutSubviews()
-        
         if (self.shouldUpdateTime) {
-            
             amIUsingDotTimeFormat(target.text!, separator: ".")
             if (target.text!.contains(":") || ((target.text!.contains(".") && self.isUsingDotFormat))) {
                 updateText()
@@ -98,9 +93,7 @@ class StatusBarHook: ClassHook<UILabel> {
     
     //orion: new
     func updateText() {
-        
         amIUsingDotTimeFormat(target.text!, separator: ".")
-        
         if (target.text!.contains(":") || ((target.text!.contains(".") && self.isUsingDotFormat))) {
             self.setText(target.text!)
         }
@@ -140,13 +133,5 @@ class CCHook: ClassHook<NSObject> {
         orig._controlCenterWillDismiss(arg1)
         NotificationCenter.default.post(name: NSNotification.Name("RUT_UpdateText"), object: nil)
         
-    }
-}
-
-extension UIDevice {
-    var hasNotch: Bool {
-        let context = LAContext()
-        context.canEvaluatePolicy(LAPolicy.deviceOwnerAuthenticationWithBiometrics, error: nil)
-        return context.biometryType == LABiometryType.faceID
     }
 }
