@@ -1,4 +1,3 @@
-#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 @interface _UIStatusBarStringView : UILabel
@@ -6,11 +5,9 @@
 @end
 
 @interface SpringBoard : UIApplication
-
 @end
 
 @interface SBIconController : UIViewController
-
 @end
 
 @interface UIDevice (Private)
