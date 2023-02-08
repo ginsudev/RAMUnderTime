@@ -12,5 +12,5 @@
 
 @interface UIDevice (Private)
 + (BOOL)currentIsIPad;
-+ (BOOL)tf_deviceHasFaceID;
++ (BOOL)_hasHomeButton;
 @end
